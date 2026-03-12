@@ -11,24 +11,31 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:20px 4
 nav .nav-links,nav .nav-right{display:flex;gap:32px;font-family:'Helvetica Neue',sans-serif;font-size:14px;}
 nav .logo{font-size:22px;letter-spacing:1px;}
 nav a{text-decoration:none;color:#000;}
-#idea-section{padding:56px 48px 40px;background:#faf9f7;border-bottom:1px solid #e8e4de;}
+
+#idea-section{padding:56px 48px 0;background:#faf9f7;border-bottom:1px solid #e8e4de;}
 .section-label{font-family:'Helvetica Neue',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:12px;}
 .section-title{font-size:28px;font-weight:400;margin-bottom:8px;}
 .section-sub{font-family:'Helvetica Neue',sans-serif;font-size:14px;color:#666;margin-bottom:32px;}
+
 #canvas-wrap{position:relative;width:100%;height:440px;background:#f5f2ee;border-radius:4px;overflow:hidden;}
 #bubble-canvas{position:absolute;inset:0;width:100%;height:100%;}
 #zoom-back{display:none;position:absolute;top:16px;left:16px;z-index:20;font-family:'Helvetica Neue',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;background:#000;color:#fff;border:none;padding:8px 18px;cursor:pointer;border-radius:2px;}
 #zoom-back.visible{display:block;}
 #cluster-tooltip{display:none;position:absolute;pointer-events:none;font-family:'Helvetica Neue',sans-serif;font-size:12px;background:rgba(0,0,0,0.82);color:#fff;padding:6px 12px;border-radius:2px;z-index:30;white-space:nowrap;}
 .plane{position:absolute;font-size:20px;pointer-events:none;z-index:50;}
+
 #chat-area{margin-top:20px;display:flex;gap:12px;align-items:center;}
 #idea-input{flex:1;padding:14px 18px;font-family:'Helvetica Neue',sans-serif;font-size:14px;border:1px solid #d0cbc4;border-radius:2px;background:#fff;outline:none;transition:border 0.2s;}
 #idea-input:focus{border-color:#000;}
 #idea-input::placeholder{color:#bbb;}
 #send-btn{padding:14px 28px;background:#000;color:#fff;border:none;font-family:'Helvetica Neue',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;}
 #send-btn:disabled{background:#aaa;cursor:not-allowed;}
-#placement-toast{display:none;margin-top:12px;font-family:'Helvetica Neue',sans-serif;font-size:13px;color:#555;}
-@keyframes fadeToast{0%{opacity:0;transform:translateY(4px);}15%{opacity:1;transform:translateY(0);}80%{opacity:1;}100%{opacity:0;}}
+
+/* Fixed height toast area — border never moves */
+#toast-area{height:36px;display:flex;align-items:center;padding-bottom:20px;}
+#placement-toast{font-family:'Helvetica Neue',sans-serif;font-size:13px;color:#555;opacity:0;transition:opacity 0.4s;}
+#placement-toast.show{opacity:1;}
+
 /* PANEL */
 #panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:100;justify-content:flex-end;}
 #panel-overlay.open{display:flex;}
@@ -53,7 +60,7 @@ nav a{text-decoration:none;color:#000;}
 #comment-input{flex:1;padding:10px 14px;font-family:'Helvetica Neue',sans-serif;font-size:13px;border:1px solid #ddd;border-radius:2px;outline:none;}
 #comment-input:focus{border-color:#000;}
 #comment-send{padding:10px 16px;background:#000;color:#fff;border:none;font-size:13px;cursor:pointer;border-radius:2px;}
-/* COMMUNITY */
+
 #community-section{display:flex;padding:48px 48px 0;gap:32px;}
 .sidebar{width:220px;flex-shrink:0;border-right:1px solid #eee;padding-right:24px;}
 .sidebar ul{list-style:none;}
@@ -92,18 +99,16 @@ nav a{text-decoration:none;color:#000;}
     <input id="idea-input" type="text" placeholder="e.g. a tinted SPF lip balm with skincare ingredients…" maxlength="120"/>
     <button id="send-btn" onclick="submitIdea()">Submit Idea</button>
   </div>
-  <div id="placement-toast"></div>
+  <div id="toast-area"><span id="placement-toast"></span></div>
 </section>
 
 <div id="community-section">
-  <aside class="sidebar">
-    <ul>
-      <li class="active">All communities</li>
-      <li>Monday Born</li><li>Sala</li><li>B&amp;Rudi</li><li>Elsa</li>
-      <li>Pavot</li><li>Beaubble x</li><li>Avrey</li><li>Lagoon</li>
-      <li>DNDY</li><li>Sensitive Skin</li><li>The Beaubble Curation</li><li>The Beaubble Team</li>
-    </ul>
-  </aside>
+  <aside class="sidebar"><ul>
+    <li class="active">All communities</li>
+    <li>Monday Born</li><li>Sala</li><li>B&amp;Rudi</li><li>Elsa</li>
+    <li>Pavot</li><li>Beaubble x</li><li>Avrey</li><li>Lagoon</li>
+    <li>DNDY</li><li>Sensitive Skin</li><li>The Beaubble Curation</li><li>The Beaubble Team</li>
+  </ul></aside>
   <main class="feed">
     <h1 class="feed-title">All communities</h1>
     <div class="post-card"><div class="post-meta">Team Beaubble · Monday Born</div><div class="post-title">It's Testing Time: The Thicker Version of The Seven</div></div>
@@ -138,222 +143,284 @@ nav a{text-decoration:none;color:#000;}
 </div>
 
 <script>
-// ── PALETTE ───────────────────────────────────────────────────────────────
-const AV_COLORS = [
+const AV_COLORS=[
   {bg:'#1a1a1a',fg:'#fff'},{bg:'#f5f0e8',fg:'#000'},{bg:'#d4cfc8',fg:'#000'},
   {bg:'#8a8a8a',fg:'#fff'},{bg:'#e8e0d0',fg:'#000'},{bg:'#3a3a3a',fg:'#fff'},
   {bg:'#bfb8ae',fg:'#000'},{bg:'#f0ece4',fg:'#000'},{bg:'#6a6a6a',fg:'#fff'},
 ];
-const NAMES = ['Aiko','Selin','Mina','Léa','Jess','Rudi','Tara','Elsa','Yuna'];
-
-// ── DATA ──────────────────────────────────────────────────────────────────
-const clusters = [
-  { id:'skincare', label:'Skincare', color:'#c9bdd4', pinned:true,
-    ideas:[
-      {id:1,text:'Tinted SPF lip balm',votes:18,badge:true,comments:[{name:'Aiko',av:0,text:'Replaces 3 products!'},{name:'Selin',av:1,text:'SPF 30+ please!'}]},
-      {id:2,text:'Fragrance-free Source',votes:11,badge:false,comments:[{name:'Mina',av:2,text:'Sensitive skin needs this'}]},
-      {id:3,text:'Hydrating eye cream',votes:7,badge:false,comments:[{name:'Léa',av:3,text:'My biggest concern!'}]},
-      {id:4,text:'Summer moisturizer',votes:5,badge:false,comments:[]},
-      {id:10,text:'Gentle exfoliating toner',votes:4,badge:false,comments:[]},
-      {id:11,text:'Barrier repair serum',votes:3,badge:false,comments:[{name:'Yuna',av:8,text:'So needed!'}]},
-    ]
-  },
-  { id:'packaging', label:'Packaging & Size', color:'#b4c8d4', pinned:false,
-    ideas:[
-      {id:5,text:'Refillable packaging for The Seven',votes:14,badge:false,comments:[{name:'Jess',av:4,text:'Zero waste is key'}]},
-      {id:6,text:'Travel-size serums',votes:12,badge:false,comments:[{name:'Rudi',av:5,text:'Perfect for carry-on!'}]},
-      {id:12,text:'Compostable outer packaging',votes:6,badge:false,comments:[]},
-      {id:13,text:'Mini starter set for gifting',votes:4,badge:false,comments:[]},
-    ]
-  },
-  { id:'color', label:'Makeup & Color', color:'#d4c0b4', pinned:true,
-    ideas:[
-      {id:7,text:'Blush to match Berry Freckled Pen',votes:9,badge:true,comments:[]},
-      {id:8,text:'Rosy gloss for Bitten Juice',votes:6,badge:false,comments:[{name:'Tara',av:6,text:'Obsessed!'}]},
-      {id:14,text:'Sheer tinted balm in nude tones',votes:5,badge:false,comments:[]},
-      {id:15,text:'Cream bronzer for all skin tones',votes:3,badge:false,comments:[]},
-    ]
-  },
-  { id:'hair', label:'Hair & Body', color:'#bdd4bc', pinned:false,
-    ideas:[
-      {id:9,text:'Scalp serum for hair growth',votes:3,badge:false,comments:[{name:'Elsa',av:7,text:'Expanding to hair would be amazing!'}]},
-      {id:16,text:'Nourishing body oil',votes:5,badge:false,comments:[]},
-      {id:17,text:'Curl-defining cream',votes:2,badge:false,comments:[]},
-    ]
-  },
+const NAMES=['Aiko','Selin','Mina','Léa','Jess','Rudi','Tara','Elsa','Yuna'];
+const WILD_MSGS=[
+  "✦ Couldn't quite place it — your idea is floating freely on the board. Keep an eye out for it!",
+  "✦ Your idea is one of a kind — it's out there on its own, waiting to find its people.",
+  "✦ This one's a wildcard! It's on the board, just off the beaten path.",
+  "✦ No category could hold it — your idea roams free. Scroll around to spot it!",
 ];
 
-// ── STATE ─────────────────────────────────────────────────────────────────
-let view = 'clusters'; // 'clusters' | 'zooming-in' | 'ideas' | 'zooming-out'
-let activeClusterId = null;
-let activeIdeaId = null;
-let hasVoted = false;
-let isClassifying = false;
+const clusters=[
+  {id:'skincare',label:'Skincare',color:'#c9bdd4',pinned:true,ideas:[
+    {id:1,text:'Tinted SPF lip balm',votes:18,badge:true,comments:[{name:'Aiko',av:0,text:'Replaces 3 products!'},{name:'Selin',av:1,text:'SPF 30+ please!'}]},
+    {id:2,text:'Fragrance-free Source',votes:11,badge:false,comments:[{name:'Mina',av:2,text:'Sensitive skin needs this'}]},
+    {id:3,text:'Hydrating eye cream',votes:7,badge:false,comments:[{name:'Léa',av:3,text:'My biggest concern!'}]},
+    {id:4,text:'Summer moisturizer',votes:5,badge:false,comments:[]},
+    {id:10,text:'Gentle exfoliating toner',votes:4,badge:false,comments:[]},
+    {id:11,text:'Barrier repair serum',votes:3,badge:false,comments:[{name:'Yuna',av:8,text:'So needed!'}]},
+  ]},
+  {id:'packaging',label:'Packaging & Size',color:'#b4c8d4',pinned:false,ideas:[
+    {id:5,text:'Refillable packaging',votes:14,badge:false,comments:[{name:'Jess',av:4,text:'Zero waste is key'}]},
+    {id:6,text:'Travel-size serums',votes:12,badge:false,comments:[{name:'Rudi',av:5,text:'Perfect for carry-on!'}]},
+    {id:12,text:'Compostable outer packaging',votes:6,badge:false,comments:[]},
+    {id:13,text:'Mini starter gift set',votes:4,badge:false,comments:[]},
+  ]},
+  {id:'color',label:'Makeup & Color',color:'#d4c0b4',pinned:true,ideas:[
+    {id:7,text:'Blush to match Berry Freckled Pen',votes:9,badge:true,comments:[]},
+    {id:8,text:'Rosy gloss for Bitten Juice',votes:6,badge:false,comments:[{name:'Tara',av:6,text:'Obsessed!'}]},
+    {id:14,text:'Sheer tinted balm in nude tones',votes:5,badge:false,comments:[]},
+    {id:15,text:'Cream bronzer for all skin tones',votes:3,badge:false,comments:[]},
+  ]},
+  {id:'hair',label:'Hair & Body',color:'#bdd4bc',pinned:false,ideas:[
+    {id:9,text:'Scalp serum for growth',votes:3,badge:false,comments:[{name:'Elsa',av:7,text:'Expanding to hair would be amazing!'}]},
+    {id:16,text:'Nourishing body oil',votes:5,badge:false,comments:[]},
+    {id:17,text:'Curl-defining cream',votes:2,badge:false,comments:[]},
+  ]},
+];
 
-// zoom animation
-let zoomAnim = null; // {progress:0..1, dir:'in'|'out', clusterId}
-const ZOOM_DUR = 520; // ms
+// "Others" — uncategorized wild ideas
+const wildIdeas=[
+  {id:101,text:'A mood-based product quiz',votes:6,badge:false,comments:[]},
+  {id:102,text:'Scented candle collection',votes:4,badge:false,comments:[]},
+  {id:103,text:'Custom engraving on packaging',votes:3,badge:false,comments:[{name:'Mina',av:2,text:'Would be such a lovely gift!'}]},
+  {id:104,text:'Beaubble x artist collab',votes:5,badge:false,comments:[]},
+  {id:105,text:'Subscription beauty box',votes:2,badge:false,comments:[]},
+  {id:106,text:'Virtual try-on tool',votes:4,badge:false,comments:[]},
+  {id:107,text:'Loyalty points system',votes:3,badge:false,comments:[]},
+];
+// positions assigned on layout
+let wildPos=[];
 
-// positions
-let cPos = []; // cluster positions [{c,x,y,r}]
-let iPos = []; // idea positions
+const VALID_IDS=['skincare','packaging','color','hair'];
 
-const wrap = document.getElementById('canvas-wrap');
-const canvas = document.getElementById('bubble-canvas');
-const ctx = canvas.getContext('2d');
-let W, H;
+let view='clusters';
+let activeClusterId=null;
+let activeIdeaId=null;
+let hasVoted=false;
+let isClassifying=false;
+let zoomAnim=null;
+const ZOOM_DUR=600;
+
+let cPos=[],iPos=[];
+const wrap=document.getElementById('canvas-wrap');
+const canvas=document.getElementById('bubble-canvas');
+const ctx=canvas.getContext('2d');
+let W,H,DPR=1;
 
 // ── LAYOUT ────────────────────────────────────────────────────────────────
-function clusterWeight(c){ return c.ideas.reduce((s,i)=>s+i.votes+i.comments.length,0); }
+function clusterWeight(c){return c.ideas.reduce((s,i)=>s+i.votes+i.comments.length,0);}
 
 function layoutClusters(){
   cPos=[];
-  const cx=W/2, cy=H/2, spread=Math.min(W,H)*0.27;
+  const cx=W/2,cy=H/2,spread=Math.min(W,H)*0.27;
   clusters.forEach((c,i)=>{
     const angle=(i/clusters.length)*Math.PI*2-Math.PI/2;
     const w=clusterWeight(c);
-    const r=44+Math.sqrt(w)*5;
+    const r=48+Math.sqrt(w)*5;
     cPos.push({c,x:cx+Math.cos(angle)*spread,y:cy+Math.sin(angle)*spread,r});
   });
+  // wild ideas scattered outside cluster ring
+  wildPos=[];
+  const placed=[];
+  wildIdeas.forEach((idea,i)=>{
+    const angle=(i/wildIdeas.length)*Math.PI*2+0.3;
+    const dist=Math.min(W,H)*0.44+20+Math.random()*18;
+    let x=cx+Math.cos(angle)*dist;
+    let y=cy+Math.sin(angle)*dist;
+    // clamp inside canvas
+    const wr=ideaBubbleR(idea)*0.9;
+    x=Math.max(wr+4,Math.min(W-wr-4,x));
+    y=Math.max(wr+4,Math.min(H-wr-4,y));
+    wildPos.push({idea,x,y,r:wr});
+  });
+}
+
+// minimum radius that fits text properly
+function ideaBubbleR(idea){
+  const baseR=26+Math.sqrt(idea.votes)*5.5;
+  // ensure text fits: rough estimate ~7px per char, 2 lines max
+  const chars=idea.text.length;
+  const minR=Math.max(baseR, chars*3.2);
+  return Math.min(minR,80);
 }
 
 function layoutIdeas(clusterId){
   iPos=[];
   const cl=clusters.find(c=>c.id===clusterId);
   if(!cl) return;
-  const cx=W/2, cy=H/2;
-  const spread=Math.min(W,H)*0.26;
+  const cx=W/2,cy=H/2,spread=Math.min(W,H)*0.26;
   cl.ideas.forEach((idea,i)=>{
     const angle=(i/cl.ideas.length)*Math.PI*2-Math.PI/2;
-    const r=22+Math.sqrt(idea.votes)*5.5;
+    const r=ideaBubbleR(idea);
     iPos.push({idea,x:cx+Math.cos(angle)*spread,y:cy+Math.sin(angle)*spread,r});
   });
 }
 
-// ── DRAW HELPERS ──────────────────────────────────────────────────────────
-function hexRgb(hex){
-  return{r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)};
-}
+// ── DRAW ──────────────────────────────────────────────────────────────────
+function hexRgb(hex){return{r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)};}
 
-function drawBubble(x,y,r,hexColor,alpha,label,hasBadge,showVotes,votes,isCluster,ideaCount){
-  if(r<2) return;
+// Draw mini-bubble dot (small version of main bubble style)
+function drawMiniBubble(x,y,r,hexColor,alpha){
   const {r:rr,g,b}=hexRgb(hexColor);
-  // background fill – semi-transparent so inner dots are visible
-  const grad=ctx.createRadialGradient(x-r*0.28,y-r*0.28,r*0.05,x,y,r);
-  grad.addColorStop(0,`rgba(${rr},${g},${b},${Math.min(alpha*0.72,0.72)})`);
-  grad.addColorStop(1,`rgba(${rr},${g},${b},${Math.min(alpha*0.38,0.38)})`);
+  const grad=ctx.createRadialGradient(x-r*0.25,y-r*0.25,r*0.05,x,y,r);
+  grad.addColorStop(0,`rgba(${rr},${g},${b},${Math.min(alpha*0.8,0.8)})`);
+  grad.addColorStop(1,`rgba(${rr},${g},${b},${Math.min(alpha*0.35,0.35)})`);
   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
   ctx.fillStyle=grad;ctx.fill();
-  // border
+  ctx.strokeStyle=`rgba(${rr},${g},${b},${Math.min(alpha*0.7,0.7)})`;
+  ctx.lineWidth=0.8;ctx.stroke();
+}
+
+function drawBubble(x,y,r,hexColor,alpha,label,hasBadge,showVotes,votes,isCluster,ideaCount,globalAlpha){
+  if(r<2||globalAlpha<=0) return;
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,Math.min(1,globalAlpha??1));
+  const {r:rr,g,b}=hexRgb(hexColor);
+
+  // main fill
+  const grad=ctx.createRadialGradient(x-r*0.28,y-r*0.28,r*0.05,x,y,r);
+  grad.addColorStop(0,`rgba(${rr},${g},${b},${Math.min(alpha*0.65,0.65)})`);
+  grad.addColorStop(1,`rgba(${rr},${g},${b},${Math.min(alpha*0.28,0.28)})`);
   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.strokeStyle=`rgba(${rr},${g},${b},${Math.min(alpha*0.9,0.9)})`;
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.strokeStyle=`rgba(${rr},${g},${b},${Math.min(alpha*0.85,0.85)})`;
   ctx.lineWidth=1.5;ctx.stroke();
 
-  // inner dots representing ideas (cluster view only)
-  if(isCluster && ideaCount && r>36){
-    const dotR=Math.max(3,r*0.07);
-    const dotSpread=r*0.48;
-    for(let d=0;d<Math.min(ideaCount,8);d++){
-      const ang=(d/Math.min(ideaCount,8))*Math.PI*2;
-      const dx=x+Math.cos(ang)*dotSpread*(0.5+0.5*(d%2));
-      const dy=y+Math.sin(ang)*dotSpread*(0.5+0.5*(d%2));
-      ctx.beginPath();ctx.arc(dx,dy,dotR,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${rr-30},${g-30},${b-30},0.55)`;
-      ctx.fill();
+  // mini-bubbles inside cluster
+  if(isCluster&&ideaCount&&r>40){
+    const count=Math.min(ideaCount,8);
+    const dotR=Math.max(4,r*0.09);
+    for(let d=0;d<count;d++){
+      const ang=(d/count)*Math.PI*2+(d%2?0.4:0);
+      const dist=r*(d%2===0?0.42:0.6);
+      drawMiniBubble(x+Math.cos(ang)*dist,y+Math.sin(ang)*dist,dotR,hexColor,alpha*0.9);
     }
   }
 
-  // label
-  const fontSize=Math.max(10,Math.min(r*0.21,14));
+  // label — wrapped, clipped to bubble
+  ctx.save();
+  ctx.beginPath();ctx.arc(x,y,r*0.88,0,Math.PI*2);ctx.clip();
+  const fontSize=Math.max(9,Math.min(r*0.19,13));
   ctx.font=`${fontSize}px 'Helvetica Neue',sans-serif`;
   ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillStyle=`rgba(30,20,20,0.8)`;
+  ctx.fillStyle=`rgba(30,20,20,0.82)`;
+  const maxW=r*1.55;
   const words=label.split(' ');
-  const lineH=fontSize*1.35;
   let lines=[],cur='';
   words.forEach(w=>{
     const test=cur?cur+' '+w:w;
-    if(ctx.measureText(test).width>r*1.55&&cur){lines.push(cur);cur=w;}
+    if(ctx.measureText(test).width>maxW&&cur){lines.push(cur);cur=w;}
     else cur=test;
   });
   if(cur)lines.push(cur);
-  const startY=y-(lines.length-1)*lineH/2+(showVotes?-fontSize*0.4:0);
-  lines.forEach((l,i)=>ctx.fillText(l,x,startY+i*lineH));
+  // truncate to 3 lines max
+  if(lines.length>3)lines=[lines[0],lines[1],lines[2].slice(0,12)+'…'];
+  const lineH=fontSize*1.3;
+  const totalH=lines.length*lineH;
+  const topY=y-totalH/2+(showVotes?-fontSize*0.4:0);
+  lines.forEach((l,i)=>ctx.fillText(l,x,topY+i*lineH+lineH/2));
+  ctx.restore();
 
-  if(showVotes&&r>26){
+  if(showVotes&&r>30){
     ctx.font=`10px 'Helvetica Neue',sans-serif`;
     ctx.fillStyle='rgba(0,0,0,0.38)';
-    ctx.fillText(`♥ ${votes}`,x,y+r*0.52);
+    ctx.textAlign='center';
+    ctx.fillText(`♥ ${votes}`,x,y+r*0.6);
   }
 
-  // ⭐ badge: white circle top-right
+  // ⭐ badge — white circle sticker, properly centered
   if(hasBadge){
-    const bx=x+r*0.68, by=y-r*0.68, br=Math.max(9,r*0.2);
+    const br=Math.max(9,r*0.2);
+    const bx=x+r*0.65;
+    const by=y-r*0.65;
     ctx.beginPath();ctx.arc(bx,by,br,0,Math.PI*2);
     ctx.fillStyle='#fff';ctx.fill();
     ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=1;ctx.stroke();
-    ctx.font=`${br*1.1}px serif`;
+    ctx.font=`${br*1.25}px serif`;
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('⭐',bx,by+1);
+    ctx.fillText('⭐',bx,by);
   }
+  ctx.restore();
 }
 
-// ── RENDER FRAME ──────────────────────────────────────────────────────────
+// ── RENDER ────────────────────────────────────────────────────────────────
 function render(){
   ctx.clearRect(0,0,W,H);
 
   if(!zoomAnim){
     if(view==='clusters'){
-      cPos.forEach(p=>drawBubble(p.x,p.y,p.r,p.c.color,0.9,p.c.label,p.c.pinned,false,0,true,p.c.ideas.length));
+      // wild ideas first (behind clusters)
+      wildPos.forEach(p=>{
+        drawBubble(p.x,p.y,p.r,'#c8c0b4',0.55,p.idea.text,p.idea.badge,true,p.idea.votes,false,0,0.72);
+      });
+      cPos.forEach(p=>{
+        drawBubble(p.x,p.y,p.r,p.c.color,0.9,p.c.label,p.c.pinned,false,0,true,p.c.ideas.length,1);
+      });
     } else {
-      // idea view: faint cluster bg
       const cl=clusters.find(c=>c.id===activeClusterId);
-      if(cl){
-        const {r:rr,g,b}=hexRgb(cl.color);
-        ctx.beginPath();ctx.arc(W/2,H/2,Math.min(W,H)*0.44,0,Math.PI*2);
-        ctx.fillStyle=`rgba(${rr},${g},${b},0.07)`;ctx.fill();
-        iPos.forEach(p=>{
-          const op=0.35+Math.min(p.idea.votes/28,0.55);
-          drawBubble(p.x,p.y,p.r,cl.color,op+0.2,p.idea.text,p.idea.badge,true,p.idea.votes,false,0);
-        });
-      }
+      if(!cl) return;
+      const {r:rr,g,b}=hexRgb(cl.color);
+      ctx.beginPath();ctx.arc(W/2,H/2,Math.min(W,H)*0.44,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${rr},${g},${b},0.07)`;ctx.fill();
+      iPos.forEach(p=>{
+        const op=0.35+Math.min(p.idea.votes/28,0.55);
+        drawBubble(p.x,p.y,p.r,cl.color,op+0.15,p.idea.text,p.idea.badge,true,p.idea.votes,false,0,1);
+      });
     }
     return;
   }
 
   // ZOOM ANIMATION
-  const {progress:t,dir,clusterId}=zoomAnim;
+  const {progress:raw,dir,clusterId}=zoomAnim;
+  // smooth ease
+  const t=raw<0.5?2*raw*raw:1-Math.pow(-2*raw+2,2)/2;
+  const inward=dir==='in';
   const clPos=cPos.find(p=>p.c.id===clusterId);
   const cl=clusters.find(c=>c.id===clusterId);
   if(!clPos||!cl) return;
 
-  // eased progress
-  const ease=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-  const inward=dir==='in';
-
-  // other clusters fade out / in
+  // other clusters + wild ideas: smooth fade
+  const otherAlpha=inward?(1-t):t;
+  wildPos.forEach(p=>drawBubble(p.x,p.y,p.r,'#c8c0b4',0.55,p.idea.text,p.idea.badge,true,p.idea.votes,false,0,otherAlpha*0.72));
   cPos.forEach(p=>{
     if(p.c.id===clusterId) return;
-    const a=inward?(1-ease)*0.9:ease*0.9;
-    if(a>0.01) drawBubble(p.x,p.y,p.r,p.c.color,a,p.c.label,p.c.pinned,false,0,true,p.c.ideas.length);
+    drawBubble(p.x,p.y,p.r,p.c.color,0.9,p.c.label,p.c.pinned,false,0,true,p.c.ideas.length,otherAlpha);
   });
 
-  // active cluster scales up to fill canvas
-  const maxR=Math.sqrt(W*W+H*H)*0.6;
-  const curR=inward?clPos.r+(maxR-clPos.r)*ease:maxR-(maxR-clPos.r)*ease;
-  const curX=inward?clPos.x+(W/2-clPos.x)*ease:W/2+(clPos.x-W/2)*ease;
-  const curY=inward?clPos.y+(H/2-clPos.y)*ease:H/2+(clPos.y-H/2)*ease;
-  const clAlpha=inward?0.9-(ease*0.82):0.08+(ease*0.82);
-  const {r:rr,g,b}=hexRgb(cl.color);
-  ctx.beginPath();ctx.arc(curX,curY,curR,0,Math.PI*2);
-  ctx.fillStyle=`rgba(${rr},${g},${b},${clAlpha*0.18})`;ctx.fill();
+  // active cluster expands
+  const maxR=Math.sqrt(W*W+H*H)*0.62;
+  const curR=inward?clPos.r+(maxR-clPos.r)*t:maxR-(maxR-clPos.r)*t;
+  const curX=inward?clPos.x+(W/2-clPos.x)*t:W/2+(clPos.x-W/2)*t;
+  const curY=inward?clPos.y+(H/2-clPos.y)*t:H/2+(clPos.y-H/2)*t;
 
-  // ideas emerge / disappear
-  if(ease>0.3){
-    const ideaAlpha=inward?(ease-0.3)/0.7:(1-(ease-0.3)/0.7);
+  const {r:rr,g,b}=hexRgb(cl.color);
+  const bgAlpha=inward?(0.65-(t*0.57)):(0.08+(t*0.57));
+  ctx.beginPath();ctx.arc(curX,curY,curR,0,Math.PI*2);
+  ctx.fillStyle=`rgba(${rr},${g},${b},${bgAlpha*0.22})`;ctx.fill();
+  ctx.strokeStyle=`rgba(${rr},${g},${b},${bgAlpha*0.6})`;
+  ctx.lineWidth=1.5;ctx.stroke();
+
+  // active cluster label fades out
+  if(t<0.5){
+    ctx.save();ctx.globalAlpha=1-t*2;
+    ctx.font=`14px 'Helvetica Neue',sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(30,20,20,0.8)';
+    ctx.fillText(cl.label,curX,curY);
+    ctx.restore();
+  }
+
+  // ideas fade in (zoom-in) or fade out (zoom-out)
+  const ideaAlpha=inward?Math.max(0,(t-0.4)/0.6):Math.max(0,(1-(t-0.0)/0.7));
+  if(ideaAlpha>0.01){
     iPos.forEach(p=>{
-      const op=(0.35+Math.min(p.idea.votes/28,0.55))*ideaAlpha;
-      if(op>0.05) drawBubble(p.x,p.y,p.r,cl.color,op+0.1,p.idea.text,p.idea.badge,true,p.idea.votes,false,0);
+      const op=0.35+Math.min(p.idea.votes/28,0.55);
+      drawBubble(p.x,p.y,p.r,cl.color,op+0.15,p.idea.text,p.idea.badge,true,p.idea.votes,false,0,ideaAlpha);
     });
   }
 }
@@ -367,7 +434,6 @@ function zoomIn(clusterId){
   document.getElementById('zoom-back').classList.add('visible');
   requestAnimationFrame(animLoop);
 }
-
 function zoomOut(){
   if(!activeClusterId) return;
   zoomAnim={progress:0,dir:'out',clusterId:activeClusterId,startTime:performance.now()};
@@ -375,35 +441,38 @@ function zoomOut(){
   document.getElementById('zoom-back').classList.remove('visible');
   requestAnimationFrame(animLoop);
 }
-
 function animLoop(ts){
-  const elapsed=ts-zoomAnim.startTime;
-  zoomAnim.progress=Math.min(elapsed/ZOOM_DUR,1);
+  zoomAnim.progress=Math.min((ts-zoomAnim.startTime)/ZOOM_DUR,1);
   render();
-  if(zoomAnim.progress<1){
-    requestAnimationFrame(animLoop);
-  } else {
-    if(zoomAnim.dir==='in'){view='ideas';}
+  if(zoomAnim.progress<1){requestAnimationFrame(animLoop);}
+  else{
+    if(zoomAnim.dir==='in')view='ideas';
     else{view='clusters';activeClusterId=null;}
-    zoomAnim=null;
-    render();
+    zoomAnim=null;render();
   }
 }
 
-// ── CANVAS INTERACTION ────────────────────────────────────────────────────
+// ── CLICK / HOVER ─────────────────────────────────────────────────────────
+function hitTest(mx,my,positions){
+  for(const p of positions){
+    if((mx-p.x)**2+(my-p.y)**2<=p.r**2) return p;
+  }
+  return null;
+}
+
 canvas.addEventListener('click',e=>{
   if(zoomAnim) return;
   const rect=canvas.getBoundingClientRect();
   const mx=(e.clientX-rect.left)*(W/rect.width);
   const my=(e.clientY-rect.top)*(H/rect.height);
   if(view==='clusters'){
-    for(const p of cPos){
-      if((mx-p.x)**2+(my-p.y)**2<=p.r**2){zoomIn(p.c.id);return;}
-    }
+    const cp=hitTest(mx,my,cPos);
+    if(cp){zoomIn(cp.c.id);return;}
+    const wp=hitTest(mx,my,wildPos);
+    if(wp){openPanel(wp.idea.id,'wild');return;}
   } else if(view==='ideas'){
-    for(const p of iPos){
-      if((mx-p.x)**2+(my-p.y)**2<=p.r**2){openPanel(p.idea.id);return;}
-    }
+    const ip=hitTest(mx,my,iPos);
+    if(ip) openPanel(ip.idea.id,'cluster');
   }
 });
 
@@ -415,26 +484,25 @@ canvas.addEventListener('mousemove',e=>{
   const my=(e.clientY-rect.top)*(H/rect.height);
   let hit=false;
   if(view==='clusters'){
-    for(const p of cPos){
-      if((mx-p.x)**2+(my-p.y)**2<=p.r**2){
-        canvas.style.cursor='pointer';
-        tip.style.display='block';
-        tip.style.left=(e.clientX-rect.left+14)+'px';
-        tip.style.top=(e.clientY-rect.top-34)+'px';
-        const w=clusterWeight(p.c);
-        tip.textContent=`${p.c.label} · ${p.c.ideas.length} ideas · ♥ ${w}`;
-        hit=true;break;
-      }
+    const cp=hitTest(mx,my,cPos);
+    if(cp){
+      canvas.style.cursor='pointer';
+      tip.style.display='block';
+      tip.style.left=(e.clientX-rect.left+14)+'px';
+      tip.style.top=(e.clientY-rect.top-34)+'px';
+      tip.textContent=`${cp.c.label} · ${cp.c.ideas.length} ideas · ♥ ${clusterWeight(cp.c)}`;
+      hit=true;
+    } else {
+      const wp=hitTest(mx,my,wildPos);
+      if(wp){canvas.style.cursor='pointer';tip.style.display='none';hit=true;}
     }
   } else if(view==='ideas'){
-    for(const p of iPos){
-      if((mx-p.x)**2+(my-p.y)**2<=p.r**2){canvas.style.cursor='pointer';hit=true;break;}
-    }
+    if(hitTest(mx,my,iPos)){canvas.style.cursor='pointer';hit=true;}
   }
   if(!hit){canvas.style.cursor='default';tip.style.display='none';}
 });
 
-// ── SUBMIT IDEA ───────────────────────────────────────────────────────────
+// ── SUBMIT ────────────────────────────────────────────────────────────────
 async function submitIdea(){
   const inp=document.getElementById('idea-input');
   const txt=inp.value.trim();
@@ -443,63 +511,81 @@ async function submitIdea(){
   const btn=document.getElementById('send-btn');
   btn.disabled=true;btn.textContent='Placing…';
 
-  // paper plane from input to canvas
+  // paper plane
   const chatRect=document.getElementById('chat-area').getBoundingClientRect();
   const wrapRect=wrap.getBoundingClientRect();
   const plane=document.createElement('div');
   plane.className='plane';
   plane.textContent='✈️';
-  plane.style.cssText=`left:${chatRect.left-wrapRect.left+chatRect.width*0.5}px;top:${chatRect.top-wrapRect.top-10}px;transition:left 0.7s ease,top 0.7s ease,opacity 0.4s;`;
+  plane.style.cssText=`left:${chatRect.left-wrapRect.left+chatRect.width*0.5}px;top:${chatRect.top-wrapRect.top-10}px;transition:left 0.75s ease,top 0.75s ease,opacity 0.4s;`;
   wrap.appendChild(plane);
 
-  // classify with AI
-  let assignedId='skincare';
+  let assignedId=null;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',max_tokens:20,
-        system:'Beauty idea classifier. Reply with ONLY one word: skincare, packaging, color, or hair.',
-        messages:[{role:'user',content:`Idea: "${txt}"`}]
+        system:`Beauty idea classifier. Reply with ONLY one of: skincare, packaging, color, hair. If the idea does not fit any category well, reply: other`,
+        messages:[{role:'user',content:`Classify this beauty community idea: "${txt}"`}]
       })
     });
     const d=await res.json();
     const raw=d.content[0].text.trim().toLowerCase();
-    ['skincare','packaging','color','hair'].forEach(v=>{if(raw.includes(v))assignedId=v;});
-  } catch(_){}
+    const match=[...VALID_IDS,'other'].find(v=>raw.includes(v));
+    assignedId=match||'other';
+  } catch(_){assignedId='skincare';}
 
   const newIdea={id:Date.now(),text:txt,votes:0,badge:false,comments:[]};
-  clusters.find(c=>c.id===assignedId).ideas.push(newIdea);
-  layoutClusters();
-  if(activeClusterId===assignedId) layoutIdeas(assignedId);
+  let toastMsg='';
 
-  // fly plane to target cluster
-  const tPos=cPos.find(p=>p.c.id===assignedId);
-  if(tPos){
-    requestAnimationFrame(()=>{
-      plane.style.left=tPos.x+'px';
-      plane.style.top=tPos.y+'px';
-      plane.style.opacity='0';
-    });
+  if(assignedId==='other'||!VALID_IDS.includes(assignedId)){
+    wildIdeas.push(newIdea);
+    layoutClusters();
+    const tgt=wildPos[wildPos.length-1];
+    if(tgt){
+      requestAnimationFrame(()=>{
+        plane.style.left=tgt.x+'px';
+        plane.style.top=tgt.y+'px';
+        plane.style.opacity='0';
+      });
+    }
+    const msgs=WILD_MSGS;
+    toastMsg=msgs[Math.floor(Math.random()*msgs.length)];
+  } else {
+    clusters.find(c=>c.id===assignedId).ideas.push(newIdea);
+    layoutClusters();
+    if(activeClusterId===assignedId) layoutIdeas(assignedId);
+    const tPos=cPos.find(p=>p.c.id===assignedId);
+    if(tPos){
+      requestAnimationFrame(()=>{
+        plane.style.left=tPos.x+'px';
+        plane.style.top=tPos.y+'px';
+        plane.style.opacity='0';
+      });
+    }
+    const cl=clusters.find(c=>c.id===assignedId);
+    toastMsg=`✨ Your idea landed in "${cl.label}"`;
   }
+
   setTimeout(()=>{
     plane.remove();
     render();
-    const cl=clusters.find(c=>c.id===assignedId);
-    showToast(`✨ Your idea landed in "${cl.label}"`);
-  },800);
+    showToast(toastMsg);
+  },820);
 
   inp.value='';btn.disabled=false;btn.textContent='Submit Idea';
   isClassifying=false;
 }
 
+let toastTimer=null;
 function showToast(msg){
-  const t=document.getElementById('placement-toast');
-  t.textContent=msg;t.style.display='block';
-  t.style.animation='none';
-  requestAnimationFrame(()=>{t.style.animation='fadeToast 3.5s forwards';});
-  setTimeout(()=>{t.style.display='none';},3600);
+  const el=document.getElementById('placement-toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3800);
 }
 
 document.getElementById('idea-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitIdea();});
@@ -508,22 +594,24 @@ document.getElementById('idea-input').addEventListener('keydown',e=>{if(e.key===
 function findIdea(id){
   for(const cl of clusters){
     const idea=cl.ideas.find(i=>i.id===id);
-    if(idea) return{idea,cl};
+    if(idea) return{idea,cl,wild:false};
   }
+  const idea=wildIdeas.find(i=>i.id===id);
+  if(idea) return{idea,cl:null,wild:true};
   return null;
 }
 
 function openPanel(ideaId){
   activeIdeaId=ideaId;hasVoted=false;
-  const {idea,cl}=findIdea(ideaId);
+  const found=findIdea(ideaId);
+  if(!found) return;
+  const {idea}=found;
   document.getElementById('panel-idea-text').textContent=idea.text;
   document.getElementById('panel-votes').textContent=`${idea.votes} people support this idea`;
   document.getElementById('upvote-num').textContent=idea.votes;
   document.getElementById('upvote-btn').classList.remove('voted');
-  // badge area
   const ba=document.getElementById('panel-badge-area');
   ba.innerHTML=idea.badge?`<span class="panel-badge">⭐ Beaubble is keeping an eye out</span>`:'';
-  // badge button state
   const bb=document.getElementById('badge-btn');
   bb.className=idea.badge?'badged':'';
   bb.textContent=idea.badge?'⭐ Watching this idea':'⭐ Keep an eye out';
@@ -539,10 +627,9 @@ function renderComments(idea){
   }
   list.innerHTML=idea.comments.map(c=>{
     const av=AV_COLORS[c.av%AV_COLORS.length];
-    const init=(c.name||'?')[0].toUpperCase();
     return `<div class="comment">
       <div class="comment-header">
-        <div class="avatar" style="background:${av.bg};color:${av.fg};">${init}</div>
+        <div class="avatar" style="background:${av.bg};color:${av.fg};">${(c.name||'?')[0]}</div>
         <span class="c-author">${c.name}</span>
       </div>
       <div>${c.text}</div>
@@ -556,10 +643,11 @@ function closePanel(){document.getElementById('panel-overlay').classList.remove(
 function upvote(){
   if(hasVoted||!activeIdeaId) return;
   hasVoted=true;
-  const {idea}=findIdea(activeIdeaId);
-  idea.votes++;
-  document.getElementById('panel-votes').textContent=`${idea.votes} people support this idea`;
-  document.getElementById('upvote-num').textContent=idea.votes;
+  const found=findIdea(activeIdeaId);
+  if(!found) return;
+  found.idea.votes++;
+  document.getElementById('panel-votes').textContent=`${found.idea.votes} people support this idea`;
+  document.getElementById('upvote-num').textContent=found.idea.votes;
   document.getElementById('upvote-btn').classList.add('voted');
   if(view==='clusters') layoutClusters();
   else layoutIdeas(activeClusterId);
@@ -568,15 +656,15 @@ function upvote(){
 
 function toggleBadge(){
   if(!activeIdeaId) return;
-  const {idea,cl}=findIdea(activeIdeaId);
-  idea.badge=!idea.badge;
-  // also update cluster pinned if any idea in it has badge
-  cl.pinned=cl.ideas.some(i=>i.badge);
+  const found=findIdea(activeIdeaId);
+  if(!found) return;
+  found.idea.badge=!found.idea.badge;
+  if(found.cl) found.cl.pinned=found.cl.ideas.some(i=>i.badge);
   const bb=document.getElementById('badge-btn');
   const ba=document.getElementById('panel-badge-area');
-  bb.className=idea.badge?'badged':'';
-  bb.textContent=idea.badge?'⭐ Watching this idea':'⭐ Keep an eye out';
-  ba.innerHTML=idea.badge?`<span class="panel-badge">⭐ Beaubble is keeping an eye out</span>`:'';
+  bb.className=found.idea.badge?'badged':'';
+  bb.textContent=found.idea.badge?'⭐ Watching this idea':'⭐ Keep an eye out';
+  ba.innerHTML=found.idea.badge?`<span class="panel-badge">⭐ Beaubble is keeping an eye out</span>`:'';
   if(view==='clusters') layoutClusters();
   else layoutIdeas(activeClusterId);
   render();
@@ -586,11 +674,12 @@ function addComment(){
   const inp=document.getElementById('comment-input');
   const txt=inp.value.trim();
   if(!txt||!activeIdeaId) return;
-  const {idea}=findIdea(activeIdeaId);
+  const found=findIdea(activeIdeaId);
+  if(!found) return;
   const ri=Math.floor(Math.random()*NAMES.length);
-  idea.comments.push({name:NAMES[ri],av:ri,text:txt});
+  found.idea.comments.push({name:NAMES[ri],av:ri,text:txt});
   inp.value='';
-  renderComments(idea);
+  renderComments(found.idea);
   if(view==='clusters') layoutClusters();
   else layoutIdeas(activeClusterId);
   render();
@@ -598,13 +687,13 @@ function addComment(){
 
 document.getElementById('comment-input').addEventListener('keydown',e=>{if(e.key==='Enter')addComment();});
 
-// ── RESIZE & INIT ─────────────────────────────────────────────────────────
+// ── RESIZE ────────────────────────────────────────────────────────────────
 function resize(){
-  const dpr=window.devicePixelRatio||1;
+  DPR=window.devicePixelRatio||1;
   W=wrap.clientWidth;H=wrap.clientHeight;
-  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.width=W*DPR;canvas.height=H*DPR;
   canvas.style.width=W+'px';canvas.style.height=H+'px';
-  ctx.scale(dpr,dpr);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   layoutClusters();
   if(activeClusterId) layoutIdeas(activeClusterId);
   render();
