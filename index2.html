@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Beaubble&</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Georgia',serif;background:#fff;color:#000;overflow-x:hidden;}
+
+/* NAV */
+nav{display:flex;justify-content:space-between;align-items:center;padding:20px 48px;border-bottom:1px solid #e0e0e0;}
+nav .nav-links{display:flex;gap:32px;font-family:'Helvetica Neue',sans-serif;font-size:14px;}
+nav .logo{font-size:22px;letter-spacing:1px;}
+nav .nav-right{display:flex;gap:32px;font-family:'Helvetica Neue',sans-serif;font-size:14px;}
+nav a{text-decoration:none;color:#000;}
+
+/* IDEA SECTION */
+#idea-section{padding:56px 48px 40px;background:#faf9f7;border-bottom:1px solid #e8e4de;}
+.section-label{font-family:'Helvetica Neue',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:12px;}
+.section-title{font-size:28px;font-weight:400;margin-bottom:8px;}
+.section-sub{font-family:'Helvetica Neue',sans-serif;font-size:14px;color:#666;margin-bottom:32px;}
+
+/* CANVAS WRAPPER */
+#canvas-wrap{position:relative;width:100%;height:420px;background:#f5f2ee;border-radius:4px;overflow:hidden;cursor:default;}
+#bubble-canvas{position:absolute;inset:0;width:100%;height:100%;}
+
+/* ZOOM BACK BTN */
+#zoom-back{display:none;position:absolute;top:16px;left:16px;z-index:20;font-family:'Helvetica Neue',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;background:#000;color:#fff;border:none;padding:8px 18px;cursor:pointer;border-radius:2px;}
+#zoom-back.visible{display:block;}
+
+/* CLUSTER LABEL TOOLTIP */
+#cluster-tooltip{display:none;position:absolute;pointer-events:none;font-family:'Helvetica Neue',sans-serif;font-size:12px;background:#000;color:#fff;padding:5px 10px;border-radius:2px;z-index:30;white-space:nowrap;}
+
+/* PAPER PLANE ANIMATION */
+.plane{position:absolute;font-size:20px;pointer-events:none;z-index:50;transition:none;animation:flyPlane 0.9s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes flyPlane{
+  0%{opacity:1;transform:scale(1) rotate(0deg);}
+  60%{opacity:1;transform:scale(0.7) rotate(-20deg);}
+  100%{opacity:0;transform:scale(0.3) rotate(-35deg);}
+}
+
+/* CHAT INPUT */
+#chat-area{margin-top:20px;display:flex;gap:12px;align-items:center;}
+#idea-input{flex:1;padding:14px 18px;font-family:'Helvetica Neue',sans-serif;font-size:14px;border:1px solid #d0cbc4;border-radius:2px;background:#fff;outline:none;transition:border 0.2s;}
+#idea-input:focus{border-color:#000;}
+#idea-input::placeholder{color:#bbb;}
+#send-btn{padding:14px 28px;background:#000;color:#fff;border:none;font-family:'Helvetica Neue',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s;}
+#send-btn:hover{background:#333;}
+#send-btn:disabled{background:#aaa;cursor:not-allowed;}
+
+/* PLACEMENT TOAST */
+#placement-toast{display:none;margin-top:12px;font-family:'Helvetica Neue',sans-serif;font-size:13px;color:#555;animation:fadeToast 3s forwards;}
+@keyframes fadeToast{0%{opacity:0;transform:translateY(4px);}15%{opacity:1;transform:translateY(0);}80%{opacity:1;}100%{opacity:0;}}
+
+/* PANEL */
+#panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:100;justify-content:flex-end;}
+#panel-overlay.open{display:flex;}
+#panel{width:380px;height:100%;background:#fff;padding:40px 32px;overflow-y:auto;animation:slideIn 0.3s ease;display:flex;flex-direction:column;gap:20px;}
+@keyframes slideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+#panel-close{align-self:flex-end;background:none;border:none;font-size:22px;cursor:pointer;color:#999;}
+#panel-idea-text{font-size:20px;font-weight:400;line-height:1.4;}
+#panel-votes{font-family:'Helvetica Neue',sans-serif;font-size:13px;color:#999;}
+.panel-badge{display:inline-block;font-family:'Helvetica Neue',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:#000;color:#fff;padding:4px 10px;border-radius:2px;margin-bottom:4px;}
+#upvote-btn{display:flex;align-items:center;gap:10px;padding:14px 20px;border:1px solid #000;background:#fff;font-family:'Helvetica Neue',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s,color 0.2s;width:fit-content;}
+#upvote-btn:hover,#upvote-btn.voted{background:#000;color:#fff;}
+.panel-divider{border:none;border-top:1px solid #eee;}
+#comments-list{display:flex;flex-direction:column;gap:14px;}
+.comment{font-family:'Helvetica Neue',sans-serif;font-size:13px;line-height:1.6;color:#333;padding-bottom:14px;border-bottom:1px solid #f0f0f0;}
+.comment-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.c-author{font-weight:600;font-size:12px;color:#000;}
+#comment-input-area{display:flex;gap:10px;align-items:center;margin-top:auto;}
+#comment-input{flex:1;padding:10px 14px;font-family:'Helvetica Neue',sans-serif;font-size:13px;border:1px solid #ddd;border-radius:2px;outline:none;}
+#comment-input:focus{border-color:#000;}
+#comment-send{padding:10px 16px;background:#000;color:#fff;border:none;font-size:13px;cursor:pointer;border-radius:2px;}
+
+/* COMMUNITY BELOW */
+#community-section{display:flex;padding:48px 48px 0;gap:32px;}
+.sidebar{width:220px;flex-shrink:0;border-right:1px solid #eee;padding-right:24px;}
+.sidebar ul{list-style:none;}
+.sidebar ul li{font-family:'Helvetica Neue',sans-serif;font-size:14px;padding:6px 0;color:#555;cursor:pointer;}
+.sidebar ul li.active{color:#000;font-weight:600;}
+.sidebar ul li::before{content:'· ';}
+.feed{flex:1;}
+.feed-title{font-size:28px;font-weight:400;margin-bottom:32px;}
+.post-card{border-bottom:1px solid #eee;padding-bottom:28px;margin-bottom:28px;font-family:'Helvetica Neue',sans-serif;}
+.post-meta{font-size:12px;color:#999;margin-bottom:6px;}
+.post-title{font-size:16px;font-weight:500;}
+.topics{width:180px;flex-shrink:0;}
+.topics-title{font-family:'Helvetica Neue',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:14px;}
+.topic-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.tag{font-family:'Helvetica Neue',sans-serif;font-size:12px;border:1px solid #ddd;border-radius:20px;padding:4px 12px;color:#555;cursor:pointer;}
+.tag:hover{border-color:#000;color:#000;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-links"><a href="#">Shop</a><a href="#">Community</a></div>
+  <div class="logo">Beaubble&amp;</div>
+  <div class="nav-right"><a href="#">Account</a><a href="#">Cart</a></div>
+</nav>
+
+<section id="idea-section">
+  <p class="section-label">Community × Product</p>
+  <h2 class="section-title">What should we make next?</h2>
+  <p class="section-sub">Drop your idea — it joins its closest community. The bigger the bubble, the more love it's getting.</p>
+
+  <div id="canvas-wrap">
+    <canvas id="bubble-canvas"></canvas>
+    <button id="zoom-back" onclick="zoomOut()">← All clusters</button>
+    <div id="cluster-tooltip"></div>
+  </div>
+
+  <div id="chat-area">
+    <input id="idea-input" type="text" placeholder="e.g. a tinted SPF lip balm with skincare ingredients…" maxlength="120"/>
+    <button id="send-btn" onclick="submitIdea()">Submit Idea</button>
+  </div>
+  <div id="placement-toast"></div>
+</section>
+
+<div id="community-section">
+  <aside class="sidebar">
+    <ul>
+      <li class="active">All communities</li>
+      <li>Monday Born</li><li>Sala</li><li>B&amp;Rudi</li><li>Elsa</li>
+      <li>Pavot</li><li>Beaubble x</li><li>Avrey</li><li>Lagoon</li>
+      <li>DNDY</li><li>Sensitive Skin</li><li>The Beaubble Curation</li><li>The Beaubble Team</li>
+    </ul>
+  </aside>
+  <main class="feed">
+    <h1 class="feed-title">All communities</h1>
+    <div class="post-card"><div class="post-meta">Team Beaubble · Monday Born</div><div class="post-title">It's Testing Time: The Thicker Version of The Seven</div></div>
+    <div class="post-card"><div class="post-meta">Teni Panosian · Monday Born</div><div class="post-title">My updated morning skincare routine for dry skin</div></div>
+    <div class="post-card"><div class="post-meta">Community · Sensitive Skin</div><div class="post-title">Does anyone else react to fragrance in toners?</div></div>
+  </main>
+  <aside class="topics">
+    <div class="topics-title">All topics</div>
+    <div class="topic-tags">
+      <span class="tag">routine</span><span class="tag">new-launch</span><span class="tag">dupes</span>
+      <span class="tag">cruelty-free</span><span class="tag">zero-waste-beauty</span><span class="tag">clean-beauty</span>
+      <span class="tag">fragrance</span><span class="tag">lips</span><span class="tag">spf</span><span class="tag">skincare</span>
+    </div>
+  </aside>
+</div>
+
+<!-- PANEL -->
+<div id="panel-overlay" onclick="closePanelOverlay(event)">
+  <div id="panel">
+    <button id="panel-close" onclick="closePanel()">✕</button>
+    <div id="panel-badge-area"></div>
+    <p id="panel-idea-text"></p>
+    <p id="panel-votes"></p>
+    <button id="upvote-btn" onclick="upvote()">
+      <span>♥ Support this idea</span><span id="upvote-num"></span>
+    </button>
+    <hr class="panel-divider"/>
+    <div id="comments-list"></div>
+    <div id="comment-input-area">
+      <input id="comment-input" type="text" placeholder="Add a note…" maxlength="140"/>
+      <button id="comment-send" onclick="addComment()">→</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const AVATARS = [
+  'https://i.pravatar.cc/40?img=1','https://i.pravatar.cc/40?img=2','https://i.pravatar.cc/40?img=3',
+  'https://i.pravatar.cc/40?img=4','https://i.pravatar.cc/40?img=5','https://i.pravatar.cc/40?img=6',
+  'https://i.pravatar.cc/40?img=7','https://i.pravatar.cc/40?img=8',
+];
+const NAMES = ['Aiko','Selin','Mina','Léa','Jess','Rudi','Tara','Elsa'];
+
+const clusters = [
+  {
+    id:'skincare', label:'Skincare', color:'#c8b8d8',
+    pinned: true, // company reviewing
+    ideas:[
+      {id:1,text:'Tinted SPF lip balm with skincare ingredients',votes:18,companyNotice:true,
+       comments:[{name:'Aiko',avatar:0,text:'This would replace 3 products for me!'},{name:'Selin',avatar:1,text:'SPF 30+ please!'}]},
+      {id:2,text:'Fragrance-free version of Source',votes:11,comments:[{name:'Mina',avatar:2,text:'Sensitive skin needs this'}]},
+      {id:3,text:'Hydrating eye cream for dark circles',votes:7,comments:[{name:'Léa',avatar:3,text:'My biggest concern!'}]},
+      {id:4,text:'Lightweight summer moisturizer',votes:5,comments:[]},
+    ]
+  },
+  {
+    id:'packaging', label:'Packaging & Size', color:'#b8ccd8',
+    ideas:[
+      {id:5,text:'Refillable packaging for The Seven',votes:14,comments:[{name:'Jess',avatar:4,text:'Zero waste is so important'}]},
+      {id:6,text:'Travel-size versions of the serums',votes:12,comments:[{name:'Rudi',avatar:5,text:'Perfect for carry-on!'}]},
+    ]
+  },
+  {
+    id:'color', label:'Makeup & Color', color:'#d8c4b8',
+    pinned:true,
+    ideas:[
+      {id:7,text:'A blush that matches the Berry Freckled Pen',votes:9,companyNotice:true,comments:[]},
+      {id:8,text:'A rosy gloss to pair with Bitten Juice',votes:6,comments:[{name:'Tara',avatar:6,text:'Obsessed with this idea'}]},
+    ]
+  },
+  {
+    id:'hair', label:'Hair & Body', color:'#c8d8c0',
+    ideas:[
+      {id:9,text:'Scalp serum for hair growth',votes:3,comments:[{name:'Elsa',avatar:7,text:'Expanding to hair would be amazing!'}]},
+    ]
+  },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let view = 'clusters'; // 'clusters' | 'ideas'
+let activeClusterId = null;
+let activeIdeaId = null;
+let hasVoted = false;
+let clusterPositions = [];
+let ideaPositions = [];
+let animFrame;
+let isClassifying = false;
+
+// ── CANVAS SETUP ──────────────────────────────────────────────────────────
+const wrap = document.getElementById('canvas-wrap');
+const canvas = document.getElementById('bubble-canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = wrap.clientWidth;
+  H = wrap.clientHeight;
+  canvas.width = W;
+  canvas.height = H;
+  if (view === 'clusters') layoutClusters();
+  else layoutIdeas(activeClusterId);
+  draw();
+}
+window.addEventListener('resize', resize);
+
+// ── CLUSTER LAYOUT ────────────────────────────────────────────────────────
+function clusterWeight(c) {
+  return c.ideas.reduce((s,i) => s + i.votes + i.comments.length, 0);
+}
+
+function layoutClusters() {
+  clusterPositions = [];
+  const n = clusters.length;
+  const cx = W/2, cy = H/2;
+  const spread = Math.min(W,H)*0.28;
+  clusters.forEach((c,i) => {
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    const w = clusterWeight(c);
+    const r = 38 + Math.sqrt(w)*5.5;
+    clusterPositions.push({
+      c, x: cx + Math.cos(angle)*spread, y: cy + Math.sin(angle)*spread, r, targetX:0,targetY:0
+    });
+  });
+}
+
+function layoutIdeas(clusterId) {
+  ideaPositions = [];
+  const cl = clusters.find(c=>c.id===clusterId);
+  if (!cl) return;
+  const n = cl.ideas.length;
+  const cx = W/2, cy = H/2;
+  const spread = Math.min(W,H)*0.25;
+  cl.ideas.forEach((idea,i) => {
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    const r = 28 + Math.sqrt(idea.votes)*5;
+    ideaPositions.push({
+      idea, x: cx + Math.cos(angle)*spread, y: cy + Math.sin(angle)*spread, r
+    });
+  });
+}
+
+// ── DRAW ──────────────────────────────────────────────────────────────────
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+
+function drawBubble(x,y,r,hex,opacity,label,badge,companyNotice,votes){
+  const {r:rr,g,b} = hexToRgb(hex);
+  // outer glow for company notice
+  if(companyNotice){
+    ctx.beginPath();
+    ctx.arc(x,y,r+6,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(0,0,0,0.18)`;
+    ctx.lineWidth=2;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // fill
+  const grad = ctx.createRadialGradient(x-r*0.3,y-r*0.3,r*0.1,x,y,r);
+  grad.addColorStop(0,`rgba(${rr},${g},${b},${Math.min(opacity+0.15,1)})`);
+  grad.addColorStop(1,`rgba(${rr},${g},${b},${opacity*0.7})`);
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=grad;
+  ctx.fill();
+  // label
+  ctx.fillStyle=`rgba(30,20,20,${Math.min(opacity+0.3,0.85)})`;
+  ctx.font=`${Math.max(11,r*0.22)}px 'Helvetica Neue',sans-serif`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  // word wrap for ideas
+  const words = label.split(' ');
+  const lineH = Math.max(13,r*0.26);
+  let lines=[],cur='';
+  words.forEach(w=>{
+    const test=cur?cur+' '+w:w;
+    if(ctx.measureText(test).width>r*1.5&&cur){lines.push(cur);cur=w;}
+    else cur=test;
+  });
+  if(cur)lines.push(cur);
+  const startY=y-(lines.length-1)*lineH/2;
+  lines.forEach((l,i)=>ctx.fillText(l,x,startY+i*lineH));
+  // votes pill
+  if(votes!==undefined&&r>30){
+    ctx.font=`11px 'Helvetica Neue',sans-serif`;
+    ctx.fillStyle='rgba(0,0,0,0.4)';
+    ctx.fillText(`♥ ${votes}`,x,y+r*0.55);
+  }
+  // badge star
+  if(badge){
+    ctx.font='14px serif';
+    ctx.fillText('★',x+r*0.65,y-r*0.65);
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  if(view==='clusters'){
+    clusterPositions.forEach(({c,x,y,r})=>{
+      const w=clusterWeight(c);
+      const op=0.35+Math.min(w/80,0.55);
+      drawBubble(x,y,r,c.color,op,c.label,c.pinned,false);
+    });
+  } else {
+    const cl=clusters.find(c=>c.id===activeClusterId);
+    if(!cl)return;
+    // faint cluster bg
+    ctx.beginPath();
+    ctx.arc(W/2,H/2,Math.min(W,H)*0.42,0,Math.PI*2);
+    const {r:rr,g,b}=hexToRgb(cl.color);
+    ctx.fillStyle=`rgba(${rr},${g},${b},0.08)`;
+    ctx.fill();
+    ideaPositions.forEach(({idea,x,y,r})=>{
+      const op=0.3+Math.min(idea.votes/30,0.55);
+      drawBubble(x,y,r,cl.color,op,idea.text,cl.pinned&&idea.companyNotice,idea.companyNotice,idea.votes);
+    });
+  }
+}
+
+// ── CLICK HANDLING ────────────────────────────────────────────────────────
+canvas.addEventListener('click',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  if(view==='clusters'){
+    for(const pos of clusterPositions){
+      const dx=mx-pos.x,dy=my-pos.y;
+      if(dx*dx+dy*dy<=pos.r*pos.r){
+        zoomIn(pos.c.id);
+        return;
+      }
+    }
+  } else {
+    for(const pos of ideaPositions){
+      const dx=mx-pos.x,dy=my-pos.y;
+      if(dx*dx+dy*dy<=pos.r*pos.r){
+        openPanel(pos.idea.id);
+        return;
+      }
+    }
+  }
+});
+
+// hover cursor
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  let hit=false;
+  const tip=document.getElementById('cluster-tooltip');
+  if(view==='clusters'){
+    for(const pos of clusterPositions){
+      const dx=mx-pos.x,dy=my-pos.y;
+      if(dx*dx+dy*dy<=pos.r*pos.r){
+        canvas.style.cursor='pointer';
+        const total=clusterWeight(pos.c);
+        tip.style.display='block';
+        tip.style.left=(e.clientX-rect.left+12)+'px';
+        tip.style.top=(e.clientY-rect.top-28)+'px';
+        tip.textContent=`${pos.c.label} · ${pos.c.ideas.length} ideas · ♥ ${total}`;
+        hit=true;break;
+      }
+    }
+  } else {
+    for(const pos of ideaPositions){
+      const dx=mx-pos.x,dy=my-pos.y;
+      if(dx*dx+dy*dy<=pos.r*pos.r){canvas.style.cursor='pointer';hit=true;break;}
+    }
+  }
+  if(!hit){canvas.style.cursor='default';tip.style.display='none';}
+});
+
+// ── ZOOM IN/OUT ───────────────────────────────────────────────────────────
+function zoomIn(clusterId){
+  activeClusterId=clusterId;
+  view='ideas';
+  layoutIdeas(clusterId);
+  draw();
+  document.getElementById('zoom-back').classList.add('visible');
+}
+function zoomOut(){
+  view='clusters';
+  activeClusterId=null;
+  layoutClusters();
+  draw();
+  document.getElementById('zoom-back').classList.remove('visible');
+}
+
+// ── SUBMIT IDEA (AI classify) ─────────────────────────────────────────────
+async function submitIdea(){
+  const inp=document.getElementById('idea-input');
+  const txt=inp.value.trim();
+  if(!txt||isClassifying)return;
+  isClassifying=true;
+  const btn=document.getElementById('send-btn');
+  btn.disabled=true;
+  btn.textContent='Placing…';
+
+  // paper plane animation
+  const inputRect=document.getElementById('chat-area').getBoundingClientRect();
+  const wrapRect=wrap.getBoundingClientRect();
+  const plane=document.createElement('div');
+  plane.className='plane';
+  plane.textContent='✈️';
+  plane.style.left=(inputRect.left-wrapRect.left+inputRect.width/2)+'px';
+  plane.style.top=(inputRect.top-wrapRect.top)+'px';
+  wrap.appendChild(plane);
+
+  // AI classify
+  let assignedClusterId=null;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:50,
+        system:`You are a beauty product idea classifier. Given an idea, respond with ONLY one of these cluster IDs: skincare, packaging, color, hair. No explanation.`,
+        messages:[{role:'user',content:`Idea: "${txt}"\nClusters: skincare (serums, moisturizers, SPF, eye cream), packaging (refills, travel size, sustainability), color (makeup, lip, blush, foundation), hair (scalp, hair growth, body). Reply with just the cluster ID.`}]
+      })
+    });
+    const data=await res.json();
+    const raw=data.content[0].text.trim().toLowerCase();
+    const valid=['skincare','packaging','color','hair'];
+    assignedClusterId=valid.find(v=>raw.includes(v))||'skincare';
+  } catch(err){ assignedClusterId='skincare'; }
+
+  const newIdea={id:Date.now(),text:txt,votes:0,comments:[]};
+  const cl=clusters.find(c=>c.id===assignedClusterId);
+  cl.ideas.push(newIdea);
+
+  // animate plane to cluster
+  setTimeout(()=>{
+    if(view==='clusters'){
+      const pos=clusterPositions.find(p=>p.c.id===assignedClusterId);
+      if(pos){
+        plane.style.transition='left 0.7s ease,top 0.7s ease,opacity 0.3s';
+        plane.style.left=pos.x+'px';
+        plane.style.top=pos.y+'px';
+      }
+    }
+    setTimeout(()=>{
+      plane.remove();
+      layoutClusters();
+      draw();
+      // toast
+      const toast=document.getElementById('placement-toast');
+      toast.textContent=`✨ Your idea landed in "${cl.label}"`;
+      toast.style.display='block';
+      toast.style.animation='none';
+      requestAnimationFrame(()=>{toast.style.animation='fadeToast 3.5s forwards';});
+      setTimeout(()=>{toast.style.display='none';},3600);
+    },800);
+  },300);
+
+  inp.value='';
+  btn.disabled=false;
+  btn.textContent='Submit Idea';
+  isClassifying=false;
+}
+
+document.getElementById('idea-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitIdea();});
+
+// ── PANEL ─────────────────────────────────────────────────────────────────
+function findIdea(id){
+  for(const cl of clusters){
+    const idea=cl.ideas.find(i=>i.id===id);
+    if(idea)return{idea,cl};
+  }
+  return null;
+}
+
+function openPanel(ideaId){
+  activeIdeaId=ideaId;
+  hasVoted=false;
+  const {idea,cl}=findIdea(ideaId);
+  document.getElementById('panel-idea-text').textContent=idea.text;
+  document.getElementById('panel-votes').textContent=`${idea.votes} people support this idea`;
+  document.getElementById('upvote-num').textContent=idea.votes;
+  document.getElementById('upvote-btn').classList.remove('voted');
+  // badge
+  const ba=document.getElementById('panel-badge-area');
+  ba.innerHTML=idea.companyNotice?`<span class="panel-badge">★ Beaubble is reviewing this</span>`:'';
+  renderComments(idea);
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+function renderComments(idea){
+  const list=document.getElementById('comments-list');
+  if(!idea.comments.length){
+    list.innerHTML=`<p style="font-family:sans-serif;font-size:13px;color:#bbb;">No notes yet — be the first!</p>`;
+    return;
+  }
+  list.innerHTML=idea.comments.map(c=>{
+    const av=typeof c.avatar==='number'?AVATARS[c.avatar%AVATARS.length]:AVATARS[0];
+    const nm=c.name||NAMES[0];
+    return `<div class="comment">
+      <div class="comment-header">
+        <div class="avatar"><img src="${av}" alt="${nm}"/></div>
+        <span class="c-author">${nm}</span>
+      </div>
+      <div>${c.text}</div>
+    </div>`;
+  }).join('');
+}
+
+function closePanelOverlay(e){if(e.target===document.getElementById('panel-overlay'))closePanel();}
+function closePanel(){document.getElementById('panel-overlay').classList.remove('open');activeIdeaId=null;}
+
+function upvote(){
+  if(hasVoted||!activeIdeaId)return;
+  hasVoted=true;
+  const {idea}=findIdea(activeIdeaId);
+  idea.votes++;
+  document.getElementById('panel-votes').textContent=`${idea.votes} people support this idea`;
+  document.getElementById('upvote-num').textContent=idea.votes;
+  document.getElementById('upvote-btn').classList.add('voted');
+  if(view==='clusters')layoutClusters();
+  else layoutIdeas(activeClusterId);
+  draw();
+}
+
+function addComment(){
+  const inp=document.getElementById('comment-input');
+  const txt=inp.value.trim();
+  if(!txt||!activeIdeaId)return;
+  const {idea}=findIdea(activeIdeaId);
+  const randIdx=Math.floor(Math.random()*NAMES.length);
+  idea.comments.push({name:NAMES[randIdx],avatar:randIdx,text:txt});
+  inp.value='';
+  renderComments(idea);
+  if(view==='clusters')layoutClusters();
+  else layoutIdeas(activeClusterId);
+  draw();
+}
+
+document.getElementById('comment-input').addEventListener('keydown',e=>{if(e.key==='Enter')addComment();});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+resize();
+</script>
+</body>
+</html>
