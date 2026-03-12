@@ -557,14 +557,22 @@ async function submitIdea(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',max_tokens:20,
-        system:'Beauty idea classifier. Reply with ONLY one word: skincare, packaging, color, hair, or other. No punctuation.',
-        messages:[{role:'user',content:`Classify this beauty community idea: "${txt}"`}]
+        model:'claude-sonnet-4-20250514',max_tokens:30,
+        system:`You classify beauty product ideas into exactly one of these five categories:
+- skincare: serums, moisturizers, SPF, eye cream, toners, cleansers, treatments
+- packaging: refillable, travel-size, eco packaging, gift sets, sustainability
+- color: makeup, lip color, blush, bronzer, foundation, eyeshadow, tinted products
+- hair: scalp, hair growth, shampoo, conditioner, styling, body care
+- other: anything that doesn't fit the above (apps, candles, events, loyalty programs, collabs, etc.)
+
+Respond with ONLY the single category word. Nothing else.`,
+        messages:[{role:'user',content:`Idea: "${txt}"`}]
       })
     });
     const d=await res.json();
     const raw=d.content[0].text.trim().toLowerCase().replace(/[^a-z]/g,'');
-    assignedId=[...VALID_IDS,'other'].find(v=>raw===v||raw.startsWith(v))||'other';
+    // scan for any valid keyword anywhere in the response
+    assignedId=[...VALID_IDS,'other'].find(v=>raw.includes(v))||'other';
   } catch(_){assignedId='skincare';}
 
   const newIdea={id:Date.now(),text:txt,votes:0,badge:false,comments:[]};
